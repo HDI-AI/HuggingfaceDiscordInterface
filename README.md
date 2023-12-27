@@ -1,9 +1,12 @@
 # Hugginface Discord Interface
+_This project is not affiliated with nor endorsed by Discord. Discord is included in the project name as an indicator of the intended use case.
+This project is not affiliated with nor endorsed by HuggingFace. HuggingFace is included in the project name as an indicator of the intended use case.
+All trademarks are property of their respective owners_
 
 
 ## About The Project
 
-Creates an interface between Huggingface Inference API and the discord API.
+Creates an interface between Huggingface Inference API and the Discord API.  
 
 This project allows:
 * A discord bot to send message text to a huggingface inference API to any available model, send the output back to discord.
@@ -76,7 +79,9 @@ Don't forget to give the project a star! Thanks again!
 
 ## License
 
-See `LICENSE.txt` for more information.
+1. See `LICENSE.txt` for the information specific to the HDI software license.  
+2. The dependencies of this software use, [Apache License 2.0](https://www.apache.org/licenses/)
+3. 
 
 ## Contact
 
