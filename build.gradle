@@ -1,0 +1,46 @@
+
+
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'com.github.sherter.google-java-format' version '0.9'
+
+}
+
+group 'net.magswag'
+version '1.0.0'
+
+apply plugin: 'java'
+sourceCompatibility = 17
+targetCompatibility = 17
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+}
+googleJavaFormat {
+    toolVersion = "1.1"
+}
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.16.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.0'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+    implementation 'net.dv8tion:JDA:5.0.0-beta.18'
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+}
+
+application {
+    mainClassName = 'net.magswag.hdi.MainApp'
+}
+
+run {
+    standardInput = System.in
+    standardOutput = System.out
+    errorOutput = System.err
+}
