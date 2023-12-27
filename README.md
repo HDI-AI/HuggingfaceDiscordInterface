@@ -15,8 +15,8 @@ This project allows:
 
 ## Getting Started
 
-The HuggingFace Discord Interface project is built using gradle. The project include a gradle wrapper so does not need to be downloaded ahead of time.
-All examples assume that they will be ran in a bourne shell. If using powershell or Window's command prompt, you may need to modify the commands.
+The HuggingFace Discord Interface project uses gradle as a built tool. The project includes a gradle wrapper so that gradle does not need to be installed ahead of time.
+All examples assume that they will be ran in a bourne shell. If using powershell or Window's command prompt, you may need to modify the commands to use `gradlew.bat` instead of `gradlew`.
 
 ### Prerequisites
 
@@ -24,11 +24,13 @@ The following tools are required to begin.
 * Java 17 (for example [Amazon Corretto](https://docs.aws.amazon.com/corretto/latest/corretto-17-ug/downloads-list.html))
   * `JAVA_HOME` environment variable must be set
   * `PATH` environment variable must include the bin directory from `JAVA_HOME`
+* Docker installed if running the project inside Docker.
+
 
 ### Installation
 
-1. Create a hugginface API Key at [https://huggingface.co/docs/api-inference/quicktour](https://huggingface.co/docs/api-inference/quicktour)
-2. Create a discord API Key at [https://discord.com/developers/docs/topics/oauth2](https://discord.com/developers/docs/topics/oauth2)
+1. Create a Huggingface API Key at [https://huggingface.co/docs/api-inference/quicktour](https://huggingface.co/docs/api-inference/quicktour)
+2. Create a Discord API Key at [https://discord.com/developers/docs/topics/oauth2](https://discord.com/developers/docs/topics/oauth2)
 3. Clone the repo
    ```sh
    git clone https://github.com/HDI-AI/HuggingfaceDiscordInterface.git
@@ -52,6 +54,11 @@ The following tools are required to begin.
    ```sh
    ./gradlew clean build && java -jar build/libs/HuggingfaceDiscordInterface-1.0.0.jar
    ```
+* Run the application in docker
+   ```sh
+   ./gradlew clean build && docker build -t magswag/hdi . && docker run magswag/hdi
+   ```
+
 
 ## Roadmap
 
