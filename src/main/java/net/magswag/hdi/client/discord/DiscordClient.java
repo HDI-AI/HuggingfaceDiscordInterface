@@ -23,9 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.magswag.hdi.client.hugs.HuggingFaceClient;
@@ -39,6 +41,8 @@ public class DiscordClient {
   private final JDA client;
   private final String channelId;
   private final String guildId;
+
+  private final boolean strictLeave;
   private final boolean filterChannel;
   private final HuggingFaceClient huggingFaceChat;
   private final List<String> defaultHistory;
@@ -47,15 +51,16 @@ public class DiscordClient {
   private final String user;
   private final String ai;
 
-  private int historySize;
+  private final int historySize;
 
-  private int historyDepth;
+  private final int historyDepth;
   private static final Logger logger = LoggerFactory.getLogger(DiscordClient.class);
 
   public DiscordClient(
       JDA client,
       String channelId,
       String guildId,
+      boolean strictLeave,
       boolean filterChannel,
       HuggingFaceClient huggingFaceChat,
       String defaultHistory,
@@ -66,6 +71,7 @@ public class DiscordClient {
     this.client = client;
     this.channelId = channelId;
     this.guildId = guildId;
+    this.strictLeave = strictLeave;
     this.filterChannel = filterChannel;
     this.huggingFaceChat = huggingFaceChat;
     this.defaultHistory = List.of(defaultHistory.split("\n"));
@@ -77,7 +83,7 @@ public class DiscordClient {
     //subtract 2 for the name context, and another 2 for the current message exchange
     this.historyDepth = this.historySize - 4;
 
-    client.addEventListener(eventListenerBuilder());
+    this.client.addEventListener(eventListenerBuilder());
   }
 
   private ListenerAdapter eventListenerBuilder() {
@@ -88,10 +94,24 @@ public class DiscordClient {
         logger.debug("channelID:  {}", event.getChannel().getId());
         logger.info("messageID:  {}", event.getMessageId());
 
+        // Leave guilds that are no longer allowed
+        if (strictLeave && !guildId.equals(event.getGuild().getId())) {
+          logger.info("Leaving guild: {}", event.getGuild().getName());
+
+          event
+              .getChannel()
+              .sendMessage("good bye!")
+              .queue(
+                  (event1) -> event.getGuild().leave().queue(),
+                  error -> {
+                    logger.error("Unable to say goodbye", error);
+                    event.getGuild().leave().queue();
+                  });
+          return;
+        }
         if (event.getMessage().getMentions().mentionsEveryone()
-            || (!event.getGuild().getId().equals(guildId))
             || (filterChannel && !event.getChannel().getId().equals(channelId))) {
-          return; // Ignore messages from other channels, discords, and @everyone mentions
+          return; // Ignore messages from other channels and @everyone mentions
         }
         if (client
                 .getSelfUser()
@@ -121,6 +141,16 @@ public class DiscordClient {
             logger.error("Error processing user request", e);
             event.getChannel().sendMessage("I don't have the emotional energy for this").queue();
           }
+        }
+      }
+
+      public void onGuildJoin(@NotNull GuildJoinEvent event) {
+        Guild guild = event.getGuild();
+        logger.info("Joined guild: {}", guild.getName());
+        // Leave guilds that try to invite the bot
+        if (!guildId.equals(guild.getId())) {
+          logger.info("Leaving guild: {}", guild.getName());
+          guild.leave().queue();
         }
       }
     };

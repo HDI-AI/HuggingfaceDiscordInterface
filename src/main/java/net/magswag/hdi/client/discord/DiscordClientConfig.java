@@ -36,12 +36,13 @@ public class DiscordClientConfig {
   private String channelID;
   private String guildID;
   private Boolean filterChannel;
+
+  private Boolean strictLeave;
   private String activity;
   private String messageHistory;
   private String bot;
   private String user;
   private String ai;
-
   private Integer historySize;
 
   @Bean
@@ -54,6 +55,7 @@ public class DiscordClientConfig {
             .build(),
         channelID,
         guildID,
+        strictLeave,
         filterChannel,
         huggingFaceClient,
         messageHistory,
@@ -101,5 +103,9 @@ public class DiscordClientConfig {
 
   public void setHistorySize(Integer historySize) {
     this.historySize = historySize;
+  }
+
+  public void setStrictLeave(Boolean strictLeave) {
+    this.strictLeave = strictLeave;
   }
 }

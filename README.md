@@ -62,7 +62,7 @@ The following tools are required to begin.
 
 ## Roadmap
 
-- [ ] Add logic for the bot to leave discord servers
+- [ ] Allow configuration of multiple guilds (discord servers)
 
 See the [open issues](https://github.com/HDI-AI/HuggingfaceDiscordInterface/issues) for a full list of proposed features (and known issues).
 
