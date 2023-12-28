@@ -62,7 +62,6 @@ The following tools are required to begin.
 
 ## Roadmap
 
-- [ ] Add a generic docker file and update usage for running with docker
 - [ ] Add logic for the bot to leave discord servers
 
 See the [open issues](https://github.com/HDI-AI/HuggingfaceDiscordInterface/issues) for a full list of proposed features (and known issues).
@@ -88,7 +87,6 @@ Don't forget to give the project a star! Thanks again!
 
 1. See `LICENSE.txt` for the information specific to the HDI software license.  
 2. The dependencies of this software use, [Apache License 2.0](https://www.apache.org/licenses/)
-3. 
 
 ## Contact
 
