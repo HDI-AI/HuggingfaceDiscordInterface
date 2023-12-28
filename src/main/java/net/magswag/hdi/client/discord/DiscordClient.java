@@ -41,8 +41,15 @@ public class DiscordClient {
   private final String guildId;
   private final boolean filterChannel;
   private final HuggingFaceClient huggingFaceChat;
-
   private final List<String> defaultHistory;
+
+  private final String bot;
+  private final String user;
+  private final String ai;
+
+  private int historySize;
+
+  private int historyDepth;
   private static final Logger logger = LoggerFactory.getLogger(DiscordClient.class);
 
   public DiscordClient(
@@ -51,13 +58,25 @@ public class DiscordClient {
       String guildId,
       boolean filterChannel,
       HuggingFaceClient huggingFaceChat,
-      String defaultHistory) {
+      String defaultHistory,
+      String bot,
+      String user,
+      String ai,
+      Integer historySize) {
     this.client = client;
     this.channelId = channelId;
     this.guildId = guildId;
     this.filterChannel = filterChannel;
     this.huggingFaceChat = huggingFaceChat;
     this.defaultHistory = List.of(defaultHistory.split("\n"));
+    this.bot = bot;
+    this.user = user;
+    this.ai = ai;
+    this.historySize = Optional.ofNullable(historySize).orElse(10);
+
+    //subtract 2 for the name context, and another 2 for the current message exchange
+    this.historyDepth = this.historySize - 4;
+
     client.addEventListener(eventListenerBuilder());
   }
 
@@ -95,10 +114,7 @@ public class DiscordClient {
 
           try {
             String userPrompt = buildHistoryPrompt(event);
-            String response =
-                Optional.ofNullable(huggingFaceChat.sendPrompt(userPrompt))
-                    .filter(m -> !m.isEmpty())
-                    .orElse("*ignores*");
+            String response = huggingFaceChat.sendPrompt(userPrompt);
             event.getMessage().reply(response).queue();
             logger.info("Sent response to user: {}", response);
           } catch (Exception e) {
@@ -113,19 +129,26 @@ public class DiscordClient {
   private String buildHistoryPrompt(MessageReceivedEvent event) {
     String preprocessedText =
         event.getMessage().getContentRaw().replace(client.getSelfUser().getAsMention(), "").trim();
-
     String name = event.getAuthor().getName();
-    OrderedQueueList<String> chatPrompt = new OrderedQueueList<>(12);
+
+    OrderedQueueList<String> chatPrompt = new OrderedQueueList<>(historySize);
+
     chatPrompt.addAll(defaultHistory);
+
     List<String> previousHistory =
         includeHistory(0, new ArrayList<>(), event.getChannel(), event.getMessage());
     if (!previousHistory.isEmpty()) {
       chatPrompt.addAll(previousHistory);
     }
-    chatPrompt.add(String.format("User: \"%s\".", preprocessedText));
-    chatPrompt.add("Falcon:");
-    chatPrompt.add(0, String.format("User: \"My name is %s\".", name));
-    chatPrompt.add(1, String.format("Falcon:Hi %s.", name));
+
+    //add the user's current message
+    chatPrompt.add(String.format("%s: \"%s\".", user, preprocessedText));
+    chatPrompt.add(ai + ":");
+
+    //add fake history providing context of the user's name.
+    chatPrompt.add(0, String.format("%s: \"My name is %s\".", user, name));
+    chatPrompt.add(1, String.format("%s:Hi %s.", ai, name));
+
     logger.debug("prompt: {}", chatPrompt);
     return String.join("\n", chatPrompt).trim();
   }
@@ -137,15 +160,15 @@ public class DiscordClient {
             .map(Message::getContentRaw)
             .filter(text -> !text.isBlank())
             .map(m -> m.replace(client.getSelfUser().getAsMention(), ""));
-    if (depth < 8 && content.isPresent()) {
+    if (depth < historyDepth && content.isPresent()) {
       logger.debug("history added: {}", content.get());
       String author =
           Optional.ofNullable(message.getReferencedMessage())
               .map(Message::getAuthor)
               .map(User::getName)
-              .map(authorName -> authorName.replace("AI Felix", "Falcon"))
-              .filter(authorName -> authorName.equals("Falcon"))
-              .orElse("User");
+              .map(authorName -> authorName.replace(bot, ai))
+              .filter(authorName -> authorName.equals(ai))
+              .orElse(user);
       list.add(0, author + ":" + content.get());
       return includeHistory(
           depth + 1,
@@ -153,7 +176,6 @@ public class DiscordClient {
           channel,
           channel.retrieveMessageById(message.getReferencedMessage().getId()).complete());
     }
-    logger.debug("history chain ended");
     return list;
   }
 

@@ -33,14 +33,16 @@ import org.springframework.context.annotation.Configuration;
 public class DiscordClientConfig {
 
   private String token;
-
   private String channelID;
   private String guildID;
   private Boolean filterChannel;
-
   private String activity;
-
   private String messageHistory;
+  private String bot;
+  private String user;
+  private String ai;
+
+  private Integer historySize;
 
   @Bean
   @Autowired
@@ -54,7 +56,11 @@ public class DiscordClientConfig {
         guildID,
         filterChannel,
         huggingFaceClient,
-        messageHistory);
+        messageHistory,
+        bot,
+        user,
+        ai,
+        historySize);
   }
 
   public void setToken(String token) {
@@ -79,5 +85,21 @@ public class DiscordClientConfig {
 
   public void setActivity(String activity) {
     this.activity = activity;
+  }
+
+  public void setBot(String bot) {
+    this.bot = bot;
+  }
+
+  public void setUser(String user) {
+    this.user = user;
+  }
+
+  public void setAi(String ai) {
+    this.ai = ai;
+  }
+
+  public void setHistorySize(Integer historySize) {
+    this.historySize = historySize;
   }
 }

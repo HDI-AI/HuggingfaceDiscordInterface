@@ -172,8 +172,7 @@ public class HuggingFaceClient {
                     }
                     return filteredText.trim();
                   })
-              .orElseThrow(() -> new HuggingException("Unable to parse the response"))
-              .trim();
+              .orElseThrow(() -> new HuggingException("Unable to parse the response"));
 
       logger.debug("Received response: {}", responseString);
       status
