@@ -19,6 +19,7 @@
 
 package net.magswag.hdi.client.hugs;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +43,8 @@ public class HuggingFaceClient {
   private final String modelId;
   private final String accessToken;
   private final String systemPrompt;
+
+  private final String defaultResponse;
   public final String task;
   public final Boolean stream;
   public final Map<String, Object> parameters;
@@ -54,6 +57,7 @@ public class HuggingFaceClient {
       String modelId,
       String accessToken,
       String systemPrompt,
+      String defaultResponse,
       String task,
       Boolean stream,
       Map<String, Object> parameters,
@@ -62,6 +66,7 @@ public class HuggingFaceClient {
     this.modelId = modelId;
     this.accessToken = accessToken;
     this.systemPrompt = systemPrompt;
+    this.defaultResponse = defaultResponse;
     this.task = task;
     this.stream = stream;
     this.parameters = castParameters(parameters);
@@ -130,51 +135,10 @@ public class HuggingFaceClient {
 
       // Send request and parse response
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      Optional<String> status = Optional.ofNullable(fetchResponseCode(response));
 
-      Optional<String> status =
-          response
-              .headers()
-              .firstValue(":status")
-              .map(String::trim)
-              .filter(code -> IS_HTTP_CODE.matcher(code).matches());
-      logger.info(
-          "Response code: {} ({})",
-          status.orElse("<missing>"),
-          status
-              .map(
-                  code ->
-                      EnglishReasonPhraseCatalog.INSTANCE.getReason(
-                          Integer.parseInt(code), Locale.US))
-              .orElse("N/A"));
+      String responseString = parseResponseBody(response);
 
-      logger.info(
-          "response: {}",
-          Optional.ofNullable(response.body())
-              .orElseThrow(() -> new HuggingException("Missing response body")));
-      String responseString =
-          Optional.<List<Map<String, Object>>>ofNullable(
-                  mapper.readValue(response.body(), new TypeReference<>() {}))
-              .flatMap(list -> list.stream().findFirst())
-              .map(
-                  map ->
-                      String.valueOf(
-                          map.getOrDefault(
-                              "generated_text", map.getOrDefault("error", "AI_response_unknown"))))
-              .filter(responseText -> !"AI_response_unknown".equals(responseText))
-              .map(
-                  responseText -> {
-                    var filteredText = responseText;
-                    if (null != parameters.get("stop") && parameters.get("stop") instanceof List) {
-                      for (Object stopToken : ((List<?>) parameters.get("stop"))) {
-                        logger.debug("splitting {} on {}", filteredText, stopToken);
-                        filteredText = filteredText.split((String) stopToken)[0];
-                      }
-                    }
-                    return filteredText.trim();
-                  })
-              .orElseThrow(() -> new HuggingException("Unable to parse the response"));
-
-      logger.debug("Received response: {}", responseString);
       status
           .filter(code -> code.startsWith("2"))
           .orElseThrow(() -> new HuggingException("Cannot reach AI through API"));
@@ -183,5 +147,61 @@ public class HuggingFaceClient {
       logger.error("Error sending or receiving request to Hugging Face API", e);
       throw new HuggingException("Error sending or receiving request to Hugging Face API", e);
     }
+  }
+
+  private String parseResponseBody(HttpResponse<String> response)
+      throws HuggingException, JsonProcessingException {
+    logger.info(
+        "response: {}",
+        Optional.ofNullable(response.body())
+            .orElseThrow(() -> new HuggingException("Missing response body")));
+
+    String responseString =
+        Optional.<List<Map<String, Object>>>ofNullable(
+                mapper.readValue(response.body(), new TypeReference<>() {}))
+            .flatMap(list -> list.stream().findFirst())
+            .map(
+                map ->
+                    String.valueOf(
+                        map.getOrDefault(
+                            "generated_text", map.getOrDefault("error", "AI_response_unknown"))))
+            .filter(responseText -> !"AI_response_unknown".equals(responseText))
+            .map(
+                responseText -> {
+                  var filteredText = responseText;
+                  if (null != parameters.get("stop") && parameters.get("stop") instanceof List) {
+                    for (Object stopToken : ((List<?>) parameters.get("stop"))) {
+                      logger.debug("splitting {} on {}", filteredText, stopToken);
+                      filteredText = filteredText.split((String) stopToken)[0];
+                    }
+                  }
+                  if (filteredText.isBlank()) {
+                    filteredText = defaultResponse;
+                  }
+                  return filteredText.trim();
+                })
+            .orElseThrow(() -> new HuggingException("Unable to parse the response"));
+
+    logger.debug("Received response: {}", responseString);
+    return responseString;
+  }
+
+  private String fetchResponseCode(HttpResponse<String> response) {
+    Optional<String> status =
+        response
+            .headers()
+            .firstValue(":status")
+            .map(String::trim)
+            .filter(code -> IS_HTTP_CODE.matcher(code).matches());
+    logger.info(
+        "Response code: {} ({})",
+        status.orElse("<missing>"),
+        status
+            .map(
+                code ->
+                    EnglishReasonPhraseCatalog.INSTANCE.getReason(
+                        Integer.parseInt(code), Locale.US))
+            .orElse("N/A"));
+    return status.orElse(null);
   }
 }

@@ -33,13 +33,15 @@ public class HuggingFaceClientConfig {
   private String systemPrompt;
   private String task;
   private Boolean stream;
+
+  private String defaultResponse;
   private Map<String, Object> parameters;
   private Map<String, Boolean> options;
 
   @Bean
   HuggingFaceClient huggingFaceClient() {
     return new HuggingFaceClient(
-        baseurl, id, token, systemPrompt, task, stream, parameters, options);
+        baseurl, id, token, systemPrompt, defaultResponse, task, stream, parameters, options);
   }
 
   public void setBaseurl(String baseurl) {
@@ -72,5 +74,9 @@ public class HuggingFaceClientConfig {
 
   public void setOptions(Map<String, Boolean> options) {
     this.options = options;
+  }
+
+  public void setDefaultResponse(String defaultResponse) {
+    this.defaultResponse = defaultResponse;
   }
 }
