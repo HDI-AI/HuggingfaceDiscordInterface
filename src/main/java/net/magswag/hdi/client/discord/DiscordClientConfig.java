@@ -1,5 +1,8 @@
 /*
- *    The Huggingface Discord Interface links Discord users with Huggingface Inference API as a demonstration of the progress of LLM.  This software is not associated with Discord or Huggingface, and is intended for educational purposes.
+ *    The Huggingface Discord Interface links Discord users with Huggingface Inference API with the
+ *     intention of demonstrating the progress of LLM.
+ *     This software is not associated with Discord or Huggingface,
+ *     and is intended for educational purposes.
  *
  *    Copyright (c) 2023.
  *
