@@ -48,6 +48,8 @@ public class DiscordClientConfig {
   private String ai;
   private Integer historySize;
 
+  private Boolean allowHistory;
+
   @Bean
   @Autowired
   public DiscordClient discordClient(HuggingFaceClient huggingFaceClient) {
@@ -65,6 +67,7 @@ public class DiscordClientConfig {
         bot,
         user,
         ai,
+        allowHistory,
         historySize);
   }
 
@@ -110,5 +113,9 @@ public class DiscordClientConfig {
 
   public void setStrictLeave(Boolean strictLeave) {
     this.strictLeave = strictLeave;
+  }
+
+  public void setAllowHistory(Boolean allowHistory) {
+    this.allowHistory = allowHistory;
   }
 }

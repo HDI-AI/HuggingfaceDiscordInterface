@@ -53,9 +53,8 @@ public class DiscordClient {
   private final String bot;
   private final String user;
   private final String ai;
-
+  private final boolean allowHistory;
   private final int historySize;
-
   private final int historyDepth;
   private static final Logger logger = LoggerFactory.getLogger(DiscordClient.class);
 
@@ -70,6 +69,7 @@ public class DiscordClient {
       String bot,
       String user,
       String ai,
+      boolean allowHistory,
       Integer historySize) {
     this.client = client;
     this.channelId = channelId;
@@ -81,6 +81,7 @@ public class DiscordClient {
     this.bot = bot;
     this.user = user;
     this.ai = ai;
+    this.allowHistory = allowHistory;
     this.historySize = Optional.ofNullable(historySize).orElse(10);
 
     //subtract 2 for the name context, and another 2 for the current message exchange
@@ -167,11 +168,12 @@ public class DiscordClient {
     OrderedQueueList<String> chatPrompt = new OrderedQueueList<>(historySize);
 
     chatPrompt.addAll(defaultHistory);
-
-    List<String> previousHistory =
-        includeHistory(0, new ArrayList<>(), event.getChannel(), event.getMessage());
-    if (!previousHistory.isEmpty()) {
-      chatPrompt.addAll(previousHistory);
+    if (allowHistory) {
+      List<String> previousHistory =
+          includeHistory(0, new ArrayList<>(), event.getChannel(), event.getMessage());
+      if (!previousHistory.isEmpty()) {
+        chatPrompt.addAll(previousHistory);
+      }
     }
 
     //add the user's current message
