@@ -24,14 +24,14 @@ The following tools are required to begin.
 * Java 17 (for example [Amazon Corretto](https://docs.aws.amazon.com/corretto/latest/corretto-17-ug/downloads-list.html))
   * `JAVA_HOME` environment variable must be set
   * `PATH` environment variable must include the bin directory from `JAVA_HOME`
-* Docker installed if running the project inside Docker.
+* Docker installed if running the project inside Docker. (Optional)
 
 
 ### Installation
 
 1. Create a Huggingface API Key at [https://huggingface.co/docs/api-inference/quicktour](https://huggingface.co/docs/api-inference/quicktour)
 2. Create a Discord API Key at [https://discord.com/developers/docs/topics/oauth2](https://discord.com/developers/docs/topics/oauth2)
-3. Clone the repo
+3. Download the project using the github ui, or clone the repo:
    ```sh
    git clone https://github.com/HDI-AI/HuggingfaceDiscordInterface.git
    ```
@@ -40,7 +40,8 @@ The following tools are required to begin.
    net.magswag.ai.model.token='ENTER YOUR HUGGINGFACE API TOKEN'
    net.magswag.ai.discord.token='ENTER YOUR DISCORD API TOKEN'
    ```
-5. Build the project
+5. Review all remaining properties in `src/main/resources/application.properties`. No properties should be blank.  
+6. Build the project
    ```sh
    ./gradlew clean build
    ```
@@ -85,8 +86,7 @@ Don't forget to give the project a star! Thanks again!
 
 ## License
 
-1. See `LICENSE.txt` for the information specific to the HDI software license.  
-2. The dependencies of this software use, [Apache License 2.0](https://www.apache.org/licenses/)
+1. See `LICENSE.txt` for the information specific to the HDI software license. 
 
 ## Contact
 
