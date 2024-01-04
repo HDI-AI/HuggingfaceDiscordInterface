@@ -175,7 +175,11 @@ public class HuggingFaceClient {
                   if (null != parameters.get("stop") && parameters.get("stop") instanceof List) {
                     for (Object stopToken : ((List<?>) parameters.get("stop"))) {
                       logger.debug("splitting {} on {}", filteredText, stopToken);
-                      filteredText = filteredText.split((String) stopToken)[0];
+                      filteredText =
+                          Arrays.stream(filteredText.split((String) stopToken))
+                              .sequential()
+                              .findFirst()
+                              .orElse("");
                     }
                   }
                   if (filteredText.isBlank()) {
