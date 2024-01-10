@@ -51,8 +51,12 @@ public class DiscordClient {
   private final List<String> defaultHistory;
 
   private final String bot;
-  private final String user;
-  private final String ai;
+  private final String userPrefix;
+  private final String userSuffix;
+  private final String aiPrefix;
+  private final String aiSuffix;
+
+  private final String historyDelimiter;
   private final boolean allowHistory;
   private final int historySize;
   private final int historyDepth;
@@ -67,8 +71,11 @@ public class DiscordClient {
       HuggingFaceClient huggingFaceChat,
       String defaultHistory,
       String bot,
-      String user,
-      String ai,
+      String userPrefix,
+      String userSuffix,
+      String aiPrefix,
+      String aiSuffix,
+      String historyDelimiter,
       boolean allowHistory,
       Integer historySize) {
     this.client = client;
@@ -79,8 +86,11 @@ public class DiscordClient {
     this.huggingFaceChat = huggingFaceChat;
     this.defaultHistory = List.of(defaultHistory.split("\n"));
     this.bot = bot;
-    this.user = user;
-    this.ai = ai;
+    this.userPrefix = userPrefix;
+    this.userSuffix = userSuffix;
+    this.aiPrefix = aiPrefix;
+    this.aiSuffix = aiSuffix;
+    this.historyDelimiter = historyDelimiter;
     this.allowHistory = allowHistory;
     this.historySize = Optional.ofNullable(historySize).orElse(10);
 
@@ -177,15 +187,14 @@ public class DiscordClient {
     }
 
     //add the user's current message
-    chatPrompt.add(String.format("%s: \"%s\".", user, preprocessedText));
-    chatPrompt.add(ai + ":");
+    chatPrompt.add(addUserChatToken(preprocessedText));
 
     //add fake history providing context of the user's name.
-    chatPrompt.add(0, String.format("%s: \"My name is %s\".", user, name));
-    chatPrompt.add(1, String.format("%s:Hi %s.", ai, name));
+    chatPrompt.add(0, addUserChatToken(String.format("My name is %s.", name)));
+    chatPrompt.add(1, addAIChatToken(String.format("Hi %s.", name)));
 
     logger.debug("prompt: {}", chatPrompt);
-    return String.join("\n", chatPrompt).trim();
+    return String.join(historyDelimiter, chatPrompt).trim();
   }
 
   private List<String> includeHistory(
@@ -197,14 +206,17 @@ public class DiscordClient {
             .map(m -> m.replace(client.getSelfUser().getAsMention(), ""));
     if (depth < historyDepth && content.isPresent()) {
       logger.debug("history added: {}", content.get());
-      String author =
+      boolean isAI =
           Optional.ofNullable(message.getReferencedMessage())
               .map(Message::getAuthor)
               .map(User::getName)
-              .map(authorName -> authorName.replace(bot, ai))
-              .filter(authorName -> authorName.equals(ai))
-              .orElse(user);
-      list.add(0, author + ":" + content.get());
+              .filter(bot::equals)
+              .isPresent();
+      if (isAI) {
+        list.add(0, addAIChatToken(content.get()));
+      } else {
+        list.add(0, addUserChatToken(content.get()));
+      }
       return includeHistory(
           depth + 1,
           list,
@@ -212,6 +224,14 @@ public class DiscordClient {
           channel.retrieveMessageById(message.getReferencedMessage().getId()).complete());
     }
     return list;
+  }
+
+  private String addAIChatToken(String content) {
+    return this.aiPrefix + content + this.aiSuffix;
+  }
+
+  private String addUserChatToken(String content) {
+    return this.userPrefix + content + this.userSuffix;
   }
 
   public void start() throws InterruptedException {

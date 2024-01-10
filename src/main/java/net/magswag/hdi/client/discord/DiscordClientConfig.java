@@ -22,6 +22,7 @@
 
 package net.magswag.hdi.client.discord;
 
+import jakarta.annotation.PostConstruct;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -44,11 +45,32 @@ public class DiscordClientConfig {
   private String activity;
   private String messageHistory;
   private String bot;
-  private String user;
-  private String ai;
+  private String userPrefix;
+  private String userSuffix;
+  private String aiPrefix;
+  private String aiSuffix;
   private Integer historySize;
-
+  private String historyDelimiter;
   private Boolean allowHistory;
+
+  @PostConstruct
+  public void init() {
+    if (historyDelimiter == null) {
+      historyDelimiter = "";
+    }
+    if (userPrefix == null) {
+      userPrefix = "";
+    }
+    if (userSuffix == null) {
+      userSuffix = "";
+    }
+    if (aiPrefix == null) {
+      aiPrefix = "";
+    }
+    if (aiSuffix == null) {
+      aiSuffix = "";
+    }
+  }
 
   @Bean
   @Autowired
@@ -65,8 +87,11 @@ public class DiscordClientConfig {
         huggingFaceClient,
         messageHistory,
         bot,
-        user,
-        ai,
+        userPrefix,
+        userSuffix,
+        aiPrefix,
+        aiSuffix,
+        historyDelimiter,
         allowHistory,
         historySize);
   }
@@ -99,12 +124,12 @@ public class DiscordClientConfig {
     this.bot = bot;
   }
 
-  public void setUser(String user) {
-    this.user = user;
+  public void setUserPrefix(String userPrefix) {
+    this.userPrefix = userPrefix;
   }
 
-  public void setAi(String ai) {
-    this.ai = ai;
+  public void setAiPrefix(String aiPrefix) {
+    this.aiPrefix = aiPrefix;
   }
 
   public void setHistorySize(Integer historySize) {
@@ -117,5 +142,13 @@ public class DiscordClientConfig {
 
   public void setAllowHistory(Boolean allowHistory) {
     this.allowHistory = allowHistory;
+  }
+
+  public void setUserSuffix(String userSuffix) {
+    this.userSuffix = userSuffix;
+  }
+
+  public void setAiSuffix(String aiSuffix) {
+    this.aiSuffix = aiSuffix;
   }
 }
