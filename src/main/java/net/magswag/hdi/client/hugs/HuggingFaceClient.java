@@ -1,8 +1,5 @@
 /*
- *    The Huggingface Discord Interface links Discord users with Huggingface Inference API with the
- *     intention of demonstrating the progress of LLM.
- *     This software is not associated with Discord or Huggingface,
- *     and is intended for educational purposes.
+ *    The Huggingface Discord Interface links Discord users with Huggingface Inference API as a demonstration of the progress of LLM.  This software is not associated with Discord or Huggingface, and is intended for educational purposes.
  *
  *    Copyright (c) 2023.
  *
@@ -34,6 +31,7 @@ import java.net.http.HttpResponse;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.magswag.hdi.exceptions.HuggingException;
 import org.apache.http.impl.EnglishReasonPhraseCatalog;
 import org.slf4j.Logger;
@@ -88,7 +86,11 @@ public class HuggingFaceClient {
               String value = (String) entry.getValue();
               if ("stop".equals(entry.getKey())) {
                 return new AbstractMap.SimpleEntry<>(
-                    entry.getKey(), List.of(value.split("(?<!\\\\),")));
+                    entry.getKey(),
+                    Stream.of(value.split("(?<!\\\\),"))
+                        .filter(token -> !token.isEmpty())
+                        .map(token -> token.replace("\\,", ","))
+                        .collect(Collectors.toList()));
               }
               try {
                 return new AbstractMap.SimpleEntry<>(entry.getKey(), Integer.parseInt(value));
@@ -176,7 +178,7 @@ public class HuggingFaceClient {
                     for (Object stopToken : ((List<?>) parameters.get("stop"))) {
                       logger.debug("splitting {} on {}", filteredText, stopToken);
                       filteredText =
-                          Arrays.stream(filteredText.split((String) stopToken))
+                          Arrays.stream(filteredText.split(Pattern.quote((String) stopToken)))
                               .sequential()
                               .findFirst()
                               .orElse("");
