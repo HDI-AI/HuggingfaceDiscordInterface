@@ -96,8 +96,6 @@ Project Link: [https://github.com/HDI-AI/HuggingfaceDiscordInterface](https://gi
 
 Please take time to review the following important documentation, acknowledgements, and helpful development documentation.
 
-* [falcon-180B-chat acceptable use policy](https://huggingface.co/spaces/tiiuae/falcon-180b-license/blob/main/ACCEPTABLE_USE_POLICY.txt)
-* [falcon-180B-chat license](https://huggingface.co/spaces/tiiuae/falcon-180b-license/blob/main/LICENSE.txt)
 * [Huggingface Inference API Documentation](https://huggingface.co/docs/api-inference/quicktour)
 * [Discord Development](https://discord.com/developers/docs/intro)
 * [JDA Discord API wrapper](https://github.com/discord-jda/JDA)
