@@ -114,7 +114,7 @@ public class DiscordClient {
 
           event
               .getChannel()
-              .sendMessage("good bye!")
+              .sendMessage("Goodbye cruel world!")
               .queue(
                   (event1) -> event.getGuild().leave().queue(),
                   error -> {
@@ -210,7 +210,7 @@ public class DiscordClient {
           Optional.ofNullable(message.getReferencedMessage())
               .map(Message::getAuthor)
               .map(User::getName)
-              .filter(bot::equals)
+              .filter(name -> client.getSelfUser().getName().equals(name))
               .isPresent();
       if (isAI) {
         list.add(0, addAIChatToken(content.get()));
