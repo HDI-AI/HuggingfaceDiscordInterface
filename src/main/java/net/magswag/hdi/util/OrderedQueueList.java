@@ -22,7 +22,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.magswag.hdi.client.util;
+package net.magswag.hdi.util;
 
 import java.util.ArrayList;
 import java.util.Collection;

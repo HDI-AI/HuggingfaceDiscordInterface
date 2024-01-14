@@ -1,10 +1,12 @@
 /*
- *    The Huggingface Discord Interface links Discord users with Huggingface Inference API with the
- *     intention of demonstrating the progress of LLM.
+ *     The Huggingface Discord Interface links Discord users
+ *     with Huggingface Inference API with the intention of
+ *     demonstrating the progress of LLM.
+ *
  *     This software is not associated with Discord or Huggingface,
  *     and is intended for educational purposes.
  *
- *    Copyright (c) 2023.
+ *    Copyright (c) 2023-2024.
  *
  *    This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Affero General Public License as

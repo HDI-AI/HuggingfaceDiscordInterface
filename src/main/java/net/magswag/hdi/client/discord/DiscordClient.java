@@ -1,10 +1,12 @@
 /*
- *    The Huggingface Discord Interface links Discord users with Huggingface Inference API with the
- *     intention of demonstrating the progress of LLM.
+ *     The Huggingface Discord Interface links Discord users
+ *     with Huggingface Inference API with the intention of
+ *     demonstrating the progress of LLM.
+ *
  *     This software is not associated with Discord or Huggingface,
  *     and is intended for educational purposes.
  *
- *    Copyright (c) 2023.
+ *    Copyright (c) 2023-2024.
  *
  *    This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Affero General Public License as
@@ -22,19 +24,16 @@
 
 package net.magswag.hdi.client.discord;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.magswag.hdi.client.hugs.HuggingFaceClient;
-import net.magswag.hdi.client.util.OrderedQueueList;
+import net.magswag.hdi.client.prompt.PromptClient;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,21 +44,11 @@ public class DiscordClient {
   private final String channelId;
   private final String guildId;
 
+  private final PromptClient chat;
+
   private final boolean strictLeave;
   private final boolean filterChannel;
   private final HuggingFaceClient huggingFaceChat;
-  private final List<String> defaultHistory;
-
-  private final String bot;
-  private final String userPrefix;
-  private final String userSuffix;
-  private final String aiPrefix;
-  private final String aiSuffix;
-
-  private final String historyDelimiter;
-  private final boolean allowHistory;
-  private final int historySize;
-  private final int historyDepth;
   private static final Logger logger = LoggerFactory.getLogger(DiscordClient.class);
 
   public DiscordClient(
@@ -68,35 +57,15 @@ public class DiscordClient {
       String guildId,
       boolean strictLeave,
       boolean filterChannel,
-      HuggingFaceClient huggingFaceChat,
-      String defaultHistory,
-      String bot,
-      String userPrefix,
-      String userSuffix,
-      String aiPrefix,
-      String aiSuffix,
-      String historyDelimiter,
-      boolean allowHistory,
-      Integer historySize) {
+      PromptClient promptClient,
+      HuggingFaceClient huggingFaceChat) {
+    this.chat = promptClient;
     this.client = client;
     this.channelId = channelId;
     this.guildId = guildId;
     this.strictLeave = strictLeave;
     this.filterChannel = filterChannel;
     this.huggingFaceChat = huggingFaceChat;
-    this.defaultHistory = List.of(defaultHistory.split("\n"));
-    this.bot = bot;
-    this.userPrefix = userPrefix;
-    this.userSuffix = userSuffix;
-    this.aiPrefix = aiPrefix;
-    this.aiSuffix = aiSuffix;
-    this.historyDelimiter = historyDelimiter;
-    this.allowHistory = allowHistory;
-    this.historySize = Optional.ofNullable(historySize).orElse(10);
-
-    //subtract 2 for the name context, and another 2 for the current message exchange
-    this.historyDepth = this.historySize - 4;
-
     this.client.addEventListener(eventListenerBuilder());
   }
 
@@ -147,8 +116,10 @@ public class DiscordClient {
                   .orElse("none"));
 
           try {
-            String userPrompt = buildHistoryPrompt(event);
-            String response = huggingFaceChat.sendPrompt(userPrompt);
+            String prompt =
+                chat.buildPrompt(
+                    client.getSelfUser().getAsMention(), client.getSelfUser().getName(), event);
+            String response = huggingFaceChat.sendPrompt(prompt);
             event.getMessage().reply(response).queue();
             logger.info("Sent response to user: {}", response);
           } catch (Exception e) {
@@ -168,70 +139,6 @@ public class DiscordClient {
         }
       }
     };
-  }
-
-  private String buildHistoryPrompt(MessageReceivedEvent event) {
-    String preprocessedText =
-        event.getMessage().getContentRaw().replace(client.getSelfUser().getAsMention(), "").trim();
-    String name = event.getAuthor().getName();
-
-    OrderedQueueList<String> chatPrompt = new OrderedQueueList<>(historySize);
-
-    chatPrompt.addAll(defaultHistory);
-    if (allowHistory) {
-      List<String> previousHistory =
-          includeHistory(0, new ArrayList<>(), event.getChannel(), event.getMessage());
-      if (!previousHistory.isEmpty()) {
-        chatPrompt.addAll(previousHistory);
-      }
-    }
-
-    //add the user's current message
-    chatPrompt.add(addUserChatToken(preprocessedText));
-
-    //add fake history providing context of the user's name.
-    chatPrompt.add(0, addUserChatToken(String.format("My name is %s.", name)));
-    chatPrompt.add(1, addAIChatToken(String.format("Hi %s.", name)));
-
-    logger.debug("prompt: {}", chatPrompt);
-    return String.join(historyDelimiter, chatPrompt).trim();
-  }
-
-  private List<String> includeHistory(
-      int depth, List<String> list, MessageChannelUnion channel, Message message) {
-    Optional<String> content =
-        Optional.ofNullable(message.getReferencedMessage())
-            .map(Message::getContentRaw)
-            .filter(text -> !text.isBlank())
-            .map(m -> m.replace(client.getSelfUser().getAsMention(), ""));
-    if (depth < historyDepth && content.isPresent()) {
-      logger.debug("history added: {}", content.get());
-      boolean isAI =
-          Optional.ofNullable(message.getReferencedMessage())
-              .map(Message::getAuthor)
-              .map(User::getName)
-              .filter(name -> client.getSelfUser().getName().equals(name))
-              .isPresent();
-      if (isAI) {
-        list.add(0, addAIChatToken(content.get()));
-      } else {
-        list.add(0, addUserChatToken(content.get()));
-      }
-      return includeHistory(
-          depth + 1,
-          list,
-          channel,
-          channel.retrieveMessageById(message.getReferencedMessage().getId()).complete());
-    }
-    return list;
-  }
-
-  private String addAIChatToken(String content) {
-    return this.aiPrefix + content + this.aiSuffix;
-  }
-
-  private String addUserChatToken(String content) {
-    return this.userPrefix + content + this.userSuffix;
   }
 
   public void start() throws InterruptedException {

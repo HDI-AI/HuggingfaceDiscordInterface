@@ -1,10 +1,12 @@
 /*
- *    The Huggingface Discord Interface links Discord users with Huggingface Inference API with the
- *     intention of demonstrating the progress of LLM.
+ *     The Huggingface Discord Interface links Discord users
+ *     with Huggingface Inference API with the intention of
+ *     demonstrating the progress of LLM.
+ *
  *     This software is not associated with Discord or Huggingface,
  *     and is intended for educational purposes.
  *
- *    Copyright (c) 2023.
+ *    Copyright (c) 2023-2024.
  *
  *    This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Affero General Public License as
@@ -31,36 +33,34 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "net.magswag.ai.model")
 public class HuggingFaceClientConfig {
   private String baseurl;
-  private String token;
   private String id;
-  private String systemPrompt;
+  private String token;
+  private String defaultResponse;
   private String task;
   private Boolean stream;
-
-  private String defaultResponse;
   private Map<String, Object> parameters;
   private Map<String, Boolean> options;
 
   @Bean
   HuggingFaceClient huggingFaceClient() {
     return new HuggingFaceClient(
-        baseurl, id, token, systemPrompt, defaultResponse, task, stream, parameters, options);
+        baseurl, id, token, defaultResponse, task, stream, parameters, options);
   }
 
   public void setBaseurl(String baseurl) {
     this.baseurl = baseurl;
   }
 
-  public void setToken(String token) {
-    this.token = token;
-  }
-
   public void setId(String id) {
     this.id = id;
   }
 
-  public void setSystemPrompt(String systemPrompt) {
-    this.systemPrompt = systemPrompt;
+  public void setToken(String token) {
+    this.token = token;
+  }
+
+  public void setDefaultResponse(String defaultResponse) {
+    this.defaultResponse = defaultResponse;
   }
 
   public void setTask(String task) {
@@ -77,9 +77,5 @@ public class HuggingFaceClientConfig {
 
   public void setOptions(Map<String, Boolean> options) {
     this.options = options;
-  }
-
-  public void setDefaultResponse(String defaultResponse) {
-    this.defaultResponse = defaultResponse;
   }
 }

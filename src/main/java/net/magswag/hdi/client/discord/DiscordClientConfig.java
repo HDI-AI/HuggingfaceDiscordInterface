@@ -1,10 +1,12 @@
 /*
- *    The Huggingface Discord Interface links Discord users with Huggingface Inference API with the
- *     intention of demonstrating the progress of LLM.
+ *     The Huggingface Discord Interface links Discord users
+ *     with Huggingface Inference API with the intention of
+ *     demonstrating the progress of LLM.
+ *
  *     This software is not associated with Discord or Huggingface,
  *     and is intended for educational purposes.
  *
- *    Copyright (c) 2023.
+ *    Copyright (c) 2023-2024.
  *
  *    This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Affero General Public License as
@@ -22,11 +24,11 @@
 
 package net.magswag.hdi.client.discord;
 
-import jakarta.annotation.PostConstruct;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.magswag.hdi.client.hugs.HuggingFaceClient;
+import net.magswag.hdi.client.prompt.PromptClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -37,44 +39,17 @@ import org.springframework.context.annotation.Configuration;
 public class DiscordClientConfig {
 
   private String token;
+
+  private String activity;
   private String channelID;
   private String guildID;
-  private Boolean filterChannel;
-
   private Boolean strictLeave;
-  private String activity;
-  private String messageHistory;
-  private String bot;
-  private String userPrefix;
-  private String userSuffix;
-  private String aiPrefix;
-  private String aiSuffix;
-  private Integer historySize;
-  private String historyDelimiter;
-  private Boolean allowHistory;
-
-  @PostConstruct
-  public void init() {
-    if (historyDelimiter == null) {
-      historyDelimiter = "";
-    }
-    if (userPrefix == null) {
-      userPrefix = "";
-    }
-    if (userSuffix == null) {
-      userSuffix = "";
-    }
-    if (aiPrefix == null) {
-      aiPrefix = "";
-    }
-    if (aiSuffix == null) {
-      aiSuffix = "";
-    }
-  }
+  private Boolean filterChannel;
 
   @Bean
   @Autowired
-  public DiscordClient discordClient(HuggingFaceClient huggingFaceClient) {
+  public DiscordClient discordClient(
+      PromptClient promptClient, HuggingFaceClient huggingFaceClient) {
     return new DiscordClient(
         JDABuilder.createDefault(token)
             .enableIntents(GatewayIntent.MESSAGE_CONTENT)
@@ -84,16 +59,8 @@ public class DiscordClientConfig {
         guildID,
         strictLeave,
         filterChannel,
-        huggingFaceClient,
-        messageHistory,
-        bot,
-        userPrefix,
-        userSuffix,
-        aiPrefix,
-        aiSuffix,
-        historyDelimiter,
-        allowHistory,
-        historySize);
+        promptClient,
+        huggingFaceClient);
   }
 
   public void setToken(String token) {
@@ -112,43 +79,11 @@ public class DiscordClientConfig {
     this.filterChannel = filterChannel;
   }
 
-  public void setMessageHistory(String messageHistory) {
-    this.messageHistory = messageHistory;
-  }
-
-  public void setActivity(String activity) {
-    this.activity = activity;
-  }
-
-  public void setBot(String bot) {
-    this.bot = bot;
-  }
-
-  public void setUserPrefix(String userPrefix) {
-    this.userPrefix = userPrefix;
-  }
-
-  public void setAiPrefix(String aiPrefix) {
-    this.aiPrefix = aiPrefix;
-  }
-
-  public void setHistorySize(Integer historySize) {
-    this.historySize = historySize;
-  }
-
   public void setStrictLeave(Boolean strictLeave) {
     this.strictLeave = strictLeave;
   }
 
-  public void setAllowHistory(Boolean allowHistory) {
-    this.allowHistory = allowHistory;
-  }
-
-  public void setUserSuffix(String userSuffix) {
-    this.userSuffix = userSuffix;
-  }
-
-  public void setAiSuffix(String aiSuffix) {
-    this.aiSuffix = aiSuffix;
+  public void setActivity(String activity) {
+    this.activity = activity;
   }
 }

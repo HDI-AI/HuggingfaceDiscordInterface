@@ -1,7 +1,12 @@
 /*
- *    The Huggingface Discord Interface links Discord users with Huggingface Inference API as a demonstration of the progress of LLM.  This software is not associated with Discord or Huggingface, and is intended for educational purposes.
+ *     The Huggingface Discord Interface links Discord users
+ *     with Huggingface Inference API with the intention of
+ *     demonstrating the progress of LLM.
  *
- *    Copyright (c) 2023.
+ *     This software is not associated with Discord or Huggingface,
+ *     and is intended for educational purposes.
+ *
+ *    Copyright (c) 2023-2024.
  *
  *    This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Affero General Public License as
@@ -43,7 +48,6 @@ public class HuggingFaceClient {
   private final String baseUrl;
   private final String modelId;
   private final String accessToken;
-  private final String systemPrompt;
 
   private final String defaultResponse;
   public final String task;
@@ -57,7 +61,6 @@ public class HuggingFaceClient {
       String baseUrl,
       String modelId,
       String accessToken,
-      String systemPrompt,
       String defaultResponse,
       String task,
       Boolean stream,
@@ -66,7 +69,6 @@ public class HuggingFaceClient {
     this.baseUrl = baseUrl;
     this.modelId = modelId;
     this.accessToken = accessToken;
-    this.systemPrompt = systemPrompt;
     this.defaultResponse = defaultResponse;
     this.task = task;
     this.stream = stream;
@@ -110,17 +112,15 @@ public class HuggingFaceClient {
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
-  public String sendPrompt(String userPrompt) throws HuggingException {
-    logger.debug("Sending prompt: {}", userPrompt);
+  public String sendPrompt(String prompt) throws HuggingException {
     HttpClient client = HttpClient.newHttpClient();
-    String fullPrompt = this.systemPrompt + userPrompt;
     logger.debug("task: " + this.task);
     logger.debug("options: " + this.options);
 
     try {
       // Build request body
       Map<String, Object> requestBody = new HashMap<>();
-      requestBody.put("inputs", fullPrompt.trim());
+      requestBody.put("inputs", prompt.trim());
       requestBody.put("task", this.task);
       requestBody.put("parameters", parameters);
       requestBody.put("options", this.options);
