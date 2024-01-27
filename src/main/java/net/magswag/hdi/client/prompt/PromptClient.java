@@ -47,6 +47,8 @@ public class PromptClient {
   private final String historyDelimiter;
   private final String userPrefix;
   private final String userSuffix;
+
+  private final String firstChatToken;
   private final String aiPrefix;
   private final String aiSuffix;
   private final String characterName;
@@ -59,21 +61,23 @@ public class PromptClient {
       String historyDelimiter,
       String userPrefix,
       String userSuffix,
+      String firstChatToken,
       String aiPrefix,
       String aiSuffix,
       String characterName) {
     this.systemPrompt = systemPrompt;
-    this.defaultHistory = List.of(defaultHistory.split("\n"));
+    this.defaultHistory = List.of(defaultHistory.split(","));
     this.allowHistory = allowHistory;
     this.historySize = Optional.ofNullable(historySize).orElse(10);
     this.historyDelimiter = historyDelimiter;
     this.userPrefix = userPrefix;
     this.userSuffix = userSuffix;
+    this.firstChatToken = firstChatToken;
     this.aiPrefix = aiPrefix;
     this.aiSuffix = aiSuffix;
     this.characterName = characterName;
-    //subtract 2 for the name context, and another 2 for the current message exchange
-    this.historyDepth = this.historySize - 4;
+    //subtract 1 for the current message exchange
+    this.historyDepth = this.historySize - 1;
   }
 
   public final String buildPrompt(String selfMention, String selfName, MessageReceivedEvent event) {
@@ -85,7 +89,8 @@ public class PromptClient {
 
   private String buildHistoryPrompt(
       String selfMention, String selfName, MessageReceivedEvent event) {
-    String preprocessedText = event.getMessage().getContentRaw().replace(selfMention, "").trim();
+    String preprocessedText =
+        event.getMessage().getContentRaw().replace(selfMention, "").replace("%", "").trim();
     OrderedQueueList<String> chatPrompt = new OrderedQueueList<>(historySize);
     chatPrompt.addAll(defaultHistory);
     if (allowHistory) {
@@ -98,11 +103,7 @@ public class PromptClient {
     }
 
     //add the user's current message
-    chatPrompt.add(addUserChatToken(preprocessedText));
-
-    //add fake history providing context of the user's name.
-    chatPrompt.add(0, addUserChatToken("My name is %2$s."));
-    chatPrompt.add(1, addAIChatToken("Hi %2$s."));
+    chatPrompt.add(addUserChatToken(preprocessedText) + firstChatToken);
 
     logger.debug("prompt: {}", chatPrompt);
     return String.join(historyDelimiter, chatPrompt).trim();
@@ -119,7 +120,7 @@ public class PromptClient {
         Optional.ofNullable(message.getReferencedMessage())
             .map(Message::getContentRaw)
             .filter(text -> !text.isBlank())
-            .map(m -> m.replace(selfMention, ""));
+            .map(m -> m.replace(selfMention, "").replace("%", ""));
     if (depth < historyDepth && content.isPresent()) {
       logger.debug("history added: {}", content.get());
       boolean isAI =

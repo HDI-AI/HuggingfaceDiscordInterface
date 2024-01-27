@@ -187,7 +187,7 @@ public class HuggingFaceClient {
                   if (filteredText.isBlank()) {
                     filteredText = defaultResponse;
                   }
-                  return filteredText.trim();
+                  return filteredText.replace("%", "").trim();
                 })
             .orElseThrow(() -> new HuggingException("Unable to parse the response"));
 

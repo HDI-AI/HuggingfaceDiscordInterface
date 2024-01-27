@@ -39,6 +39,8 @@ public class PromptClientConfig {
   private Integer historySize;
   private String userPrefix;
   private String userSuffix;
+
+  private String firstChatToken;
   private String aiPrefix;
   private String aiSuffix;
   private String characterName;
@@ -53,6 +55,9 @@ public class PromptClientConfig {
     }
     if (userSuffix == null) {
       userSuffix = "";
+    }
+    if (firstChatToken == null) {
+      firstChatToken = "";
     }
     if (aiPrefix == null) {
       aiPrefix = "";
@@ -72,6 +77,7 @@ public class PromptClientConfig {
         historyDelimiter,
         userPrefix,
         userSuffix,
+        firstChatToken,
         aiPrefix,
         aiSuffix,
         characterName);
@@ -93,12 +99,20 @@ public class PromptClientConfig {
     this.historySize = historySize;
   }
 
+  public void setHistoryDelimiter(String historyDelimiter) {
+    this.historyDelimiter = historyDelimiter;
+  }
+
   public void setUserPrefix(String userPrefix) {
     this.userPrefix = userPrefix;
   }
 
   public void setUserSuffix(String userSuffix) {
     this.userSuffix = userSuffix;
+  }
+
+  public void setFirstChatToken(String firstChatToken) {
+    this.firstChatToken = firstChatToken;
   }
 
   public void setAiPrefix(String aiPrefix) {
